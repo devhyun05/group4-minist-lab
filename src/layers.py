@@ -23,6 +23,7 @@ class Affine:
         """가중치 W와 편향 b를 외부 params dict와 같은 배열 객체로 공유합니다."""
         self.W = W
         self.b = b
+        self.x = None
 
     def forward(self, x):
         """
@@ -33,6 +34,10 @@ class Affine:
             (batch_size, output_dim)
         """
         # TODO: backward에서 사용할 입력 x를 저장하고 x @ W + b를 반환하세요.
+        self.x = x
+        out = (x @ self.W) + self.b
+        
+        return out
         raise NotImplementedError("Affine.forward를 구현하세요.")
 
     def backward(self, dout):
@@ -48,6 +53,7 @@ class Affine:
         """
         # TODO: self.dW, self.db, dx를 계산하세요.
         # 힌트: dW = x.T @ dout, db = batch 방향 합, dx = dout @ W.T
+        
         raise NotImplementedError("Affine.backward를 구현하세요.")
 
 
