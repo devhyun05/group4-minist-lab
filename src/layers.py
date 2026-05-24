@@ -1,229 +1,129 @@
-{
-  "cells": [
-    {
-      "cell_type": "markdown",
-      "metadata": {
-        "id": "FWGcrxC4ItE7"
-      },
-      "source": [
-        "# 과제 - 신경망을 이용한 손글씨 숫자 인식\n",
-        "\n"
-      ]
-    },
-    {
-      "cell_type": "markdown",
-      "metadata": {
-        "id": "Ypti-ACaItE8"
-      },
-      "source": [
-        "## 1. 환경설정\n",
-        "\n"
-      ]
-    },
-    {
-      "cell_type": "code",
-      "execution_count": 1,
-      "metadata": {
-        "id": "-vRYVa8nItE9",
-        "colab": {
-          "base_uri": "https://localhost:8080/"
-        },
-        "outputId": "fa16fc27-2425-4aa2-b051-be056de5440a"
-      },
-      "outputs": [
-        {
-          "output_type": "stream",
-          "name": "stdout",
-          "text": [
-            "GitHub 저장소 URL (예: github.com/USERNAME/mnist-lab.git): github.com/devhyun05/group4-mnist-lab.git\n",
-            "GitHub Personal Access Token (private 저장소인 경우): ··········\n",
-            "Cloning into 'group4-mnist-lab'...\n",
-            "warning: redirecting to https://github.com/devhyun05/group4-mnist-lab.git/\n",
-            "remote: Enumerating objects: 46, done.\u001b[K\n",
-            "remote: Counting objects: 100% (46/46), done.\u001b[K\n",
-            "remote: Compressing objects: 100% (41/41), done.\u001b[K\n",
-            "remote: Total 46 (delta 10), reused 36 (delta 3), pack-reused 0 (from 0)\u001b[K\n",
-            "Receiving objects: 100% (46/46), 21.94 KiB | 7.31 MiB/s, done.\n",
-            "Resolving deltas: 100% (10/10), done.\n"
-          ]
-        }
-      ],
-      "source": [
-        "# Colab: 이 셀을 가장 먼저 실행하세요 (저장소 클론 후 경로·모듈 로드)\n",
-        "# 주의: Colab에서는 GitHub 저장소 URL과 Personal Access Token을 반드시 입력해야 합니다.\n",
-        "import os\n",
-        "import sys\n",
-        "from pathlib import Path\n",
-        "\n",
-        "if \"google.colab\" in sys.modules:\n",
-        "    from getpass import getpass\n",
-        "\n",
-        "    git_url = \"github.com/devhyun05/group4-mnist-lab.git\".strip()\n",
-        "    token = getpass(\"GitHub Personal Access Token (private 저장소인 경우): \")\n",
-        "\n",
-        "    # URL 마지막 경로를 저장소 폴더명으로 사용합니다. (예: .../mnist-lab.git -> mnist-lab)\n",
-        "    repo_name = Path(git_url.rstrip(\"/\")).name\n",
-        "    if repo_name.endswith(\".git\"):\n",
-        "        repo_name = repo_name[:-4]\n",
-        "\n",
-        "    !git clone https://{token}@{git_url}\n",
-        "    os.chdir(repo_name)\n",
-        "    sys.path.insert(0, str(Path.cwd() / \"src\"))\n",
-        "else:\n",
-        "    sys.path.insert(0, \"./src\")\n"
-      ]
-    },
-    {
-      "cell_type": "markdown",
-      "metadata": {
-        "id": "JQ8TA_iGItE-"
-      },
-      "source": [
-        "## 2. 데이터 로드"
-      ]
-    },
-    {
-      "cell_type": "code",
-      "execution_count": null,
-      "metadata": {
-        "id": "jcL0ZwCAItE-"
-      },
-      "outputs": [],
-      "source": [
-        "from data import load_mnist\n",
-        "\n",
-        "(x_train, y_train), (x_test, y_test) = load_mnist()\n",
-        "print('Train:', x_train.shape, y_train.shape)\n",
-        "print('Test:', x_test.shape, y_test.shape)"
-      ]
-    },
-    {
-      "cell_type": "markdown",
-      "metadata": {
-        "id": "hkW-uJ7JItE-"
-      },
-      "source": [
-        "## 3. 구현 및 테스트 통과 확인\n",
-        "\n",
-        "`src/` 아래 역할별 파일의 **TODO**를 순서대로 구현한 뒤 아래 셀을 실행하세요.\n",
-        "- 주요 구현 파일: `activations.py`, `layers.py`, `losses.py`, `optimizers.py`, `network.py`, `training.py`\n",
-        "- 구현 파일은 역할별 모듈을 직접 import합니다. 예: `from network import NeuralNetwork`\n",
-        "- 개발 순서: 과제 안내문 참조\n",
-        "- 테스트: `tests/` 아래의 단계별 단위 테스트를 필요한 파일부터 실행합니다. 처음에는 전체 테스트보다 맡은 부분의 테스트 파일을 먼저 실행하세요.\n",
-        "    - ReLU만 확인: `TEST_TARGET = \"tests/test_relu.py\"`\n",
-        "    - 파일 안의 일부 테스트만 확인: `PYTEST_KEYWORD = \"backward\"`\n",
-        "    - 전체 테스트 확인: `TEST_TARGET = \"tests/\"`"
-      ]
-    },
-    {
-      "cell_type": "code",
-      "execution_count": null,
-      "metadata": {
-        "id": "hum8SPMwItE-"
-      },
-      "outputs": [],
-      "source": [
-        "import subprocess\n",
-        "import sys\n",
-        "from pathlib import Path\n",
-        "\n",
-        "# Colab/로컬 모두 현재 노트북 실행 위치를 저장소 루트로 사용합니다.\n",
-        "repo_dir = Path.cwd()\n",
-        "\n",
-        "# 처음에는 자신이 구현 중인 부분의 테스트 파일만 실행하세요.\n",
-        "# 예: tests/test_relu.py, tests/test_affine.py, tests/test_training.py\n",
-        "TEST_TARGET = \"tests/test_relu.py\"\n",
-        "\n",
-        "# 특정 이름이 들어간 테스트만 실행하고 싶을 때 사용합니다.\n",
-        "# 예: \"backward\". 전체 파일을 실행하려면 빈 문자열로 둡니다.\n",
-        "PYTEST_KEYWORD = \"\"\n",
-        "\n",
-        "cmd = [sys.executable, \"-m\", \"pytest\", TEST_TARGET, \"-v\"]\n",
-        "if PYTEST_KEYWORD:\n",
-        "    cmd.extend([\"-k\", PYTEST_KEYWORD])\n",
-        "\n",
-        "print(\"실행 경로:\", repo_dir)\n",
-        "print(\"실행 명령:\", \" \".join(cmd))\n",
-        "result = subprocess.run(\n",
-        "    cmd,\n",
-        "    capture_output=True,\n",
-        "    text=True,\n",
-        "    cwd=str(repo_dir)\n",
-        ")\n",
-        "print(result.stdout)\n",
-        "if result.stderr:\n",
-        "    print(result.stderr)\n",
-        "if result.returncode == 0:\n",
-        "    print(\"\\n선택한 테스트를 통과했습니다.\")\n",
-        "else:\n",
-        "    print(\"\\n선택한 테스트 중 실패가 있습니다.\")\n"
-      ]
-    },
-    {
-      "cell_type": "markdown",
-      "metadata": {
-        "id": "IYu4U7eXItE_"
-      },
-      "source": [
-        "## 4. 모델·옵티마이저 생성 및 학습"
-      ]
-    },
-    {
-      "cell_type": "code",
-      "execution_count": null,
-      "metadata": {
-        "id": "1ddIBMETItE_"
-      },
-      "outputs": [],
-      "source": [
-        "from network import NeuralNetwork\n",
-        "from optimizers import Adam\n",
-        "from training import train\n",
-        "\n",
-        "model = NeuralNetwork(use_batchnorm=True, use_dropout=True)  # BatchNorm, Dropout 필수\n",
-        "optimizer = Adam(lr=0.001)\n",
-        "\n",
-        "loss_history = train(model, optimizer, x_train, y_train, epochs=20, batch_size=128)"
-      ]
-    },
-    {
-      "cell_type": "markdown",
-      "metadata": {
-        "id": "SyFaQnvhItE_"
-      },
-      "source": [
-        "## 5. 평가 및 손실 커브"
-      ]
-    },
-    {
-      "cell_type": "code",
-      "execution_count": null,
-      "metadata": {
-        "id": "J5bxCCiSItE_"
-      },
-      "outputs": [],
-      "source": [
-        "from training import evaluate, plot_loss_history\n",
-        "\n",
-        "acc, n_params = evaluate(model, x_test, y_test)\n",
-        "print(f'Test Accuracy: {acc:.2f}%')\n",
-        "print(f'Total Params: {n_params:,}')\n",
-        "\n",
-        "plot_loss_history(loss_history)"
-      ]
-    }
-  ],
-  "metadata": {
-    "kernelspec": {
-      "display_name": "Python 3",
-      "name": "python3"
-    },
-    "colab": {
-      "provenance": [],
-      "gpuType": "T4"
-    },
-    "accelerator": "GPU"
-  },
-  "nbformat": 4,
-  "nbformat_minor": 0
-}
+# -*- coding: utf-8 -*-
+"""
+신경망 layer 모음.
+
+학생 구현 대상:
+- Affine.forward, Affine.backward
+- BatchNorm.forward, BatchNorm.backward
+- Dropout.forward, Dropout.backward
+"""
+
+import numpy as np
+
+
+class Affine:
+    """
+    완전연결층(Fully Connected Layer).
+
+    수식은 y = xW + b 입니다.
+    MNIST에서는 784개 픽셀 입력을 은닉층/출력층 차원으로 선형 변환하는 역할을 합니다.
+    """
+
+    def __init__(self, W, b):
+        """가중치 W와 편향 b를 외부 params dict와 같은 배열 객체로 공유합니다."""
+        self.W = W
+        self.b = b
+
+    def forward(self, x):
+        """
+        Args:
+            x: (batch_size, input_dim)
+
+        Returns:
+            (batch_size, output_dim)
+        """
+        # TODO: backward에서 사용할 입력 x를 저장하고 x @ W + b를 반환하세요.
+        raise NotImplementedError("Affine.forward를 구현하세요.")
+
+    def backward(self, dout):
+        """
+        Args:
+            dout: (batch_size, output_dim)
+
+        Returns:
+            dx: (batch_size, input_dim)
+
+        Side effects:
+            self.dW, self.db에 optimizer가 사용할 gradient를 저장합니다.
+        """
+        # TODO: self.dW, self.db, dx를 계산하세요.
+        # 힌트: dW = x.T @ dout, db = batch 방향 합, dx = dout @ W.T
+        raise NotImplementedError("Affine.backward를 구현하세요.")
+
+
+class BatchNorm:
+    """
+    Batch Normalization.
+
+    미니배치 단위로 각 feature의 평균과 분산을 맞춰 학습을 안정화합니다.
+    train=True일 때는 현재 배치 통계를 쓰고, 추론 때는 누적 running_mean/running_var를 사용합니다.
+    """
+
+    def __init__(self, gamma, beta, momentum=0.9):
+        """
+        Args:
+            gamma: 정규화된 값을 다시 scale하는 학습 파라미터
+            beta: 정규화된 값에 더하는 shift 학습 파라미터
+            momentum: running_mean/running_var 이동평균 비율
+        """
+        self.gamma = gamma
+        self.beta = beta
+        self.momentum = momentum
+        self.running_mean = np.zeros_like(beta)
+        self.running_var = np.zeros_like(beta)
+        self.eps = 1e-7
+
+    def forward(self, x, train=True):
+        """
+        Args:
+            x: (batch_size, feature_dim)
+            train: True면 배치 통계, False면 running 통계 사용
+
+        Returns:
+            정규화 후 gamma, beta가 적용된 배열
+        """
+        # TODO: train=True에서는 batch mean/var로 정규화하고 running 통계를 갱신하세요.
+        # TODO: train=False에서는 running_mean/running_var를 사용하세요.
+        raise NotImplementedError("BatchNorm.forward를 구현하세요.")
+
+    def backward(self, dout):
+        """
+        BatchNorm 입력 x, scale gamma, shift beta에 대한 gradient를 계산합니다.
+
+        Args:
+            dout: 다음 층에서 넘어온 gradient
+
+        Returns:
+            dx: BatchNorm 입력 x에 대한 gradient
+        """
+        # TODO: self.dbeta, self.dgamma, dx를 계산하세요.
+        # 힌트: 먼저 dbeta와 dgamma shape가 beta/gamma와 같은지 확인합니다.
+        raise NotImplementedError("BatchNorm.backward를 구현하세요.")
+
+
+class Dropout:
+    """
+    Dropout.
+
+    학습 중 일부 뉴런 출력을 무작위로 0으로 만들어 과적합을 줄입니다.
+    이 구현은 추론 시 출력에 (1 - drop_ratio)를 곱하는 기본 dropout 방식을 사용합니다.
+    """
+
+    def __init__(self, drop_ratio=0.5):
+        """Args: drop_ratio: 학습 중 0으로 만들 뉴런 비율."""
+        self.drop_ratio = drop_ratio
+
+    def forward(self, x, train=True):
+        """
+        Args:
+            x: 입력 배열
+            train: True면 무작위 mask 적용, False면 평균적인 출력 크기로 scale
+        """
+        # TODO: train=True에서는 mask를 만들고 x에 곱하세요.
+        # TODO: train=False에서는 x * (1 - drop_ratio)를 반환하세요.
+        raise NotImplementedError("Dropout.forward를 구현하세요.")
+
+    def backward(self, dout):
+        """forward에서 꺼졌던 뉴런 위치에는 gradient도 흘리지 않습니다."""
+        # TODO: forward에서 만든 mask를 dout에 곱하세요.
+        raise NotImplementedError("Dropout.backward를 구현하세요.")
