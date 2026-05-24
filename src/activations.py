@@ -18,6 +18,9 @@ class ReLU:
     forward에서 만든 mask는 backward 때 "어느 위치로 gradient를 흘릴지" 결정하는 데 사용됩니다.
     """
 
+    def __init__(self):
+        self.mask = None
+
     def forward(self, x):
         """
         Args:
