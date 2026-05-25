@@ -102,10 +102,12 @@ Sigmoid는 Step Function과 달리 미분 가능하므로 은닉층 앞쪽까지
 
 | Activation | `||dW1||` | `||dW2||` | `||dW3||` | 관찰 메모 |
 | --- | ---: | ---: | ---: | --- |
-| ReLU | (진단 셀 실행 후 기입) | (진단 셀 실행 후 기입) | (진단 셀 실행 후 기입) | 기준 gradient 흐름 |
-| Sigmoid | (진단 셀 실행 후 기입) | (진단 셀 실행 후 기입) | (진단 셀 실행 후 기입) | 앞쪽 layer gradient가 ReLU보다 작아지는지 확인 |
+| ReLU | 2.950720e+00 | 2.069579e+00 | 1.804833e+00 | 기준 gradient 흐름 |
+| Sigmoid | 9.426143e-01 | 7.321449e-01 | 1.546690e+00 | `W1`, `W2` gradient가 ReLU보다 작게 관찰됨 |
 
 Sigmoid는 Step Function과 달리 미분 가능하므로 gradient가 완전히 끊기지는 않습니다. 다만 `sigmoid'(x) = sigmoid(x) * (1 - sigmoid(x)) <= 0.25`이기 때문에 여러 층을 지나며 gradient가 작아질 수 있습니다. 현재 모델은 은닉층이 2개이고 BatchNorm을 사용하므로 gradient vanishing이 완화되어 극단적으로 보이지 않을 수 있으며, 이 경우에는 ReLU와 Sigmoid의 gradient norm 비율과 loss curve를 함께 해석합니다.
+
+이번 진단에서는 Sigmoid의 `W1` gradient가 ReLU 대비 약 31.9%, `W2` gradient가 약 35.4% 수준으로 작았습니다. 반면 `W3`는 ReLU 대비 약 85.7% 수준으로 비교적 덜 줄었습니다. 이는 Sigmoid가 출력층 가까운 곳보다 앞쪽 은닉층에서 gradient를 더 약하게 전달할 수 있음을 보여줍니다.
 
 ## 6. 실험 환경 메모
 
