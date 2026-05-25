@@ -6,8 +6,7 @@ The script compares four model variants:
 - no_batchnorm: Dropout only
 - no_dropout_no_batchnorm: neither regularization layer
 
-Defaults intentionally use a subset so the experiment finishes quickly on CPU.
-Increase --train-size, --test-size, and --epochs for the final report run.
+Defaults use the full MNIST train/test split and 20 epochs for the report run.
 """
 
 from __future__ import annotations
@@ -52,10 +51,10 @@ VARIANTS = [
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--epochs", type=int, default=5)
+    parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch-size", type=int, default=128)
-    parser.add_argument("--train-size", type=int, default=10_000)
-    parser.add_argument("--test-size", type=int, default=2_000)
+    parser.add_argument("--train-size", type=int, default=60_000)
+    parser.add_argument("--test-size", type=int, default=10_000)
     parser.add_argument("--lr", type=float, default=0.001)
     parser.add_argument("--dropout-ratio", type=float, default=0.5)
     parser.add_argument("--seed", type=int, default=42)
