@@ -22,17 +22,81 @@ class NeuralNetwork:
     가중치 초기화: He 또는 Xavier 중 선택.
     """
 
-    def __init__(self, use_batchnorm=True, use_dropout=True, dropout_ratio=0.5):
+    def __init__(self, use_batchnorm=True, use_dropout=True, dropout_ratio=0.5, batchnorm_momentum=0.9):
         """
         Args:
             use_batchnorm: 은닉층마다 BatchNorm을 넣을지 여부
             use_dropout: 은닉층마다 Dropout을 넣을지 여부
             dropout_ratio: Dropout에서 끌 뉴런 비율
+            batchnorm_momentum: BatchNorm running mean/var 이동평균 비율
         """
         # TODO: params dict를 만들고 Affine/BatchNorm/ReLU/Dropout layer를 순서대로 구성하세요.
         # 권장 구조: 784 -> 512 -> 256 -> 10
         # self.layers는 OrderedDict로 만들고, self.grads는 params와 같은 key를 갖게 합니다.
-        raise NotImplementedError("NeuralNetwork.__init__을 구현하세요.")
+        # !TODO: WEIGHT_INIT_STD He 방식으로 초기화하기
+        WEIGHT_INIT_STD = 'relu'
+        INPUT_SIZE = 784
+        LAYER1_SIZE = 512
+        LAYER2_SIZE = 256
+        OUTPUT_SIZE = 10
+        hidden_size_list = [LAYER1_SIZE, LAYER2_SIZE]
+        self.input_size = INPUT_SIZE
+        self.output_size = OUTPUT_SIZE
+        self.hidden_size_list = hidden_size_list
+        self.hidden_layer_num = len(hidden_size_list)
+        self.use_dropout = use_dropout
+        # !TODO: weight decay 쓴다면 코드 활성화 (default: 0)
+        # self.weight_decay_lambda = weight_decay_lambda
+        self.use_batchnorm = use_batchnorm
+        self.params = {}
+
+        # 가중치 초기화
+        self.__init_weight(WEIGHT_INIT_STD)
+
+        # 계층 생성
+        activation_layer = {'relu': ReLU}
+        self.layers = OrderedDict()
+        for idx in range(1, self.hidden_layer_num+1):
+            self.layers['Affine' + str(idx)] = Affine(self.params['W' + str(idx)],
+                                                      self.params['b' + str(idx)])
+            if self.use_batchnorm:
+                self.params['gamma' + str(idx)] = np.ones(hidden_size_list[idx-1])
+                self.params['beta' + str(idx)] = np.zeros(hidden_size_list[idx-1])
+                self.layers['BatchNorm' + str(idx)] = BatchNorm(
+                    self.params['gamma' + str(idx)],
+                    self.params['beta' + str(idx)],
+                    momentum=batchnorm_momentum,
+                )
+
+            self.layers['Activation_function' + str(idx)] = activation_layer[WEIGHT_INIT_STD]()
+
+            if self.use_dropout:
+                self.layers['Dropout' + str(idx)] = Dropout(dropout_ratio)
+
+        idx = self.hidden_layer_num + 1
+        self.layers['Affine' + str(idx)] = Affine(self.params['W' + str(idx)], self.params['b' + str(idx)])
+
+        self.last_layer = Softmax()
+        # raise NotImplementedError("NeuralNetwork.__init__을 구현하세요.")
+
+    def __init_weight(self, weight_init_std):
+        """가중치 초기화
+        
+        Parameters
+        ----------
+        weight_init_std : 가중치의 표준편차 지정 (e.g. 0.01)
+            'relu'나 'he'로 지정하면 'He 초깃값'으로 설정
+            'sigmoid'나 'xavier'로 지정하면 'Xavier 초깃값'으로 설정
+        """
+        all_size_list = [self.input_size] + self.hidden_size_list + [self.output_size]
+        for idx in range(1, len(all_size_list)):
+            scale = weight_init_std
+            if str(weight_init_std).lower() in ('relu', 'he'):
+                scale = np.sqrt(2.0 / all_size_list[idx - 1])
+            elif str(weight_init_std).lower() in ('sigmoid', 'xavier'):
+                scale = np.sqrt(1.0 / all_size_list[idx - 1])
+            self.params['W' + str(idx)] = scale * np.random.randn(all_size_list[idx-1], all_size_list[idx])
+            self.params['b' + str(idx)] = np.zeros(all_size_list[idx])
 
     def forward(self, x, train=True):
         """
