@@ -22,13 +22,21 @@ class NeuralNetwork:
     가중치 초기화: He 또는 Xavier 중 선택.
     """
 
-    def __init__(self, use_batchnorm=True, use_dropout=True, dropout_ratio=0.5, batchnorm_momentum=0.9):
+    def __init__(
+        self,
+        use_batchnorm=True,
+        use_dropout=True,
+        dropout_ratio=0.5,
+        batchnorm_momentum=0.9,
+        weight_decay_lambda=0,
+    ):
         """
         Args:
             use_batchnorm: 은닉층마다 BatchNorm을 넣을지 여부
             use_dropout: 은닉층마다 Dropout을 넣을지 여부
             dropout_ratio: Dropout에서 끌 뉴런 비율
             batchnorm_momentum: BatchNorm running mean/var 이동평균 비율
+            weight_decay_lambda: L2 정규화 강도. 0이면 weight decay를 사용하지 않음
         """
         # TODO: params dict를 만들고 Affine/BatchNorm/ReLU/Dropout layer를 순서대로 구성하세요.
         # 권장 구조: 784 -> 512 -> 256 -> 10
@@ -45,8 +53,7 @@ class NeuralNetwork:
         self.hidden_size_list = hidden_size_list
         self.hidden_layer_num = len(hidden_size_list)
         self.use_dropout = use_dropout
-        # !TODO: weight decay 쓴다면 코드 활성화 (default: 0)
-        # self.weight_decay_lambda = weight_decay_lambda
+        self.weight_decay_lambda = weight_decay_lambda
         self.use_batchnorm = use_batchnorm
         self.params = {}
 
@@ -108,6 +115,13 @@ class NeuralNetwork:
             (batch_size, 10) 각 숫자 클래스의 확률
         """
         # TODO: self.layers를 순서대로 통과시키고 마지막에 Softmax를 적용하세요.
+        for key, layer in self.layers.items():
+            if "Dropout" in key or "BatchNorm" in key:
+                x = layer.forward(x, train)
+            else:
+                x = layer.forward(x)
+
+        return x
         raise NotImplementedError("NeuralNetwork.forward를 구현하세요.")
 
     def backward(self, dout):
@@ -118,12 +132,36 @@ class NeuralNetwork:
             dout: Softmax+CrossEntropy를 합친 출력층 gradient
         """
         # TODO: layer를 역순으로 통과시키고 Affine/BatchNorm의 gradient를 self.grads에 모으세요.
+        dout = self.last_layer.backward(dout)
+
+        layers = list(self.layers.values())
+        layers.reverse()
+        for layer in layers:
+            dout = layer.backward(dout)
+
+        # 결과 저장
+        grads = {}
+        for idx in range(1, self.hidden_layer_num+2):
+            grads['W' + str(idx)] = self.layers['Affine' + str(idx)].dW + self.weight_decay_lambda * self.params['W' + str(idx)]
+            grads['b' + str(idx)] = self.layers['Affine' + str(idx)].db
+
+            if self.use_batchnorm and idx != self.hidden_layer_num+1:
+                grads['gamma' + str(idx)] = self.layers['BatchNorm' + str(idx)].dgamma
+                grads['beta' + str(idx)] = self.layers['BatchNorm' + str(idx)].dbeta
+
+        self.grads = grads
+        return self.grads
         raise NotImplementedError("NeuralNetwork.backward를 구현하세요.")
 
     def loss(self, x, y):
         """현재 모델의 예측 확률을 만든 뒤 cross entropy loss를 반환합니다."""
         y_pred = self.forward(x, train=True)
-        return cross_entropy_loss(y_pred, y)
+        weight_decay = 0
+        for idx in range(1, self.hidden_layer_num+2):
+            W = self.params['W' + str(idx)]
+            weight_decay += 0.5 * self.weight_decay_lambda * np.sum(W**2)
+
+        return cross_entropy_loss(y_pred, y) + weight_decay
 
     def predict(self, x):
         """추론 모드로 확률을 예측합니다. BatchNorm/Dropout은 train=False로 동작합니다."""
