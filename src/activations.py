@@ -7,7 +7,6 @@
 - Softmax.forward, Softmax.backward
 """
 
-from typing_extensions import deprecated
 import numpy as np
 
 
