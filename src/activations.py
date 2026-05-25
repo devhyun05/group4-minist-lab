@@ -53,6 +53,23 @@ class ReLU:
         raise NotImplementedError("ReLU.backward를 구현하세요.")
 
 
+class StepFunction:
+    """
+    Step Function 활성화 함수.
+
+    x > 0이면 1, 그 외에는 0을 반환합니다.
+    실제 step function은 x=0에서 미분 불가능하고, 나머지 구간의 미분은 0입니다.
+    """
+
+    def forward(self, x):
+        """입력을 0/1 binary activation으로 변환합니다."""
+        return (x > 0).astype(x.dtype)
+
+    def backward(self, dout):
+        """미분값을 0으로 두어 이전 층으로 gradient를 흘리지 않습니다."""
+        return np.zeros_like(dout)
+
+
 class Softmax:
     """
     Softmax 출력층.
