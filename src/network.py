@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-from activations import ReLU, Softmax, StepFunction
+from activations import ReLU, Sigmoid, Softmax, StepFunction
 from layers import Affine, BatchNorm, Dropout
 from losses import cross_entropy_loss
 
@@ -38,7 +38,7 @@ class NeuralNetwork:
             dropout_ratio: Dropout에서 끌 뉴런 비율
             batchnorm_momentum: BatchNorm running mean/var 이동평균 비율
             weight_decay_lambda: L2 정규화 강도. 0이면 weight decay를 사용하지 않음
-            activation: 은닉층 활성화 함수. "relu" 또는 "step"
+            activation: 은닉층 활성화 함수. "relu", "step" 또는 "sigmoid"
         """
         # TODO: params dict를 만들고 Affine/BatchNorm/ReLU/Dropout layer를 순서대로 구성하세요.
         # 권장 구조: 784 -> 512 -> 256 -> 10
@@ -64,7 +64,7 @@ class NeuralNetwork:
         self.__init_weight(WEIGHT_INIT_STD)
 
         # 계층 생성
-        activation_layer = {'relu': ReLU, 'step': StepFunction}
+        activation_layer = {'relu': ReLU, 'step': StepFunction, 'sigmoid': Sigmoid}
         if self.activation not in activation_layer:
             raise ValueError(f"지원하지 않는 activation입니다: {activation}")
 

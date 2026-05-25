@@ -68,6 +68,7 @@ Adam의 `beta1`, `beta2`는 gradient와 gradient 제곱의 이동평균을 얼�
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: |
 | Baseline-A | ReLU | BN=True, Dropout=True, Dropout ratio=0.5, He init | Adam(lr=0.001, beta1=0.9, beta2=0.999) | 20 | 128 | **98.44%** | **537,354** |
 | Step-A | Step Function | Baseline-A에서 은닉층 activation만 Step으로 변경 | Adam(lr=0.001, beta1=0.9, beta2=0.999) | 20 | 128 | 77.29% | 537,354 |
+| Sigmoid-A | Sigmoid | Baseline-A에서 은닉층 activation만 Sigmoid로 변경, He init 유지 | Adam(lr=0.001, beta1=0.9, beta2=0.999) | 20 | 128 | (노트북 실행 후 기입) | 537,354 |
 
 손실 곡선은 `mnist_lab.ipynb`의 `plot_loss_history(loss_history)` 출력으로 확인합니다. 현재 기준 실험에서는 학습 후 테스트 정확도 98% 이상을 달성했으므로, 기본 구조와 optimizer 설정은 MNIST 분류에 충분히 안정적으로 수렴한 것으로 볼 수 있습니다.
 
@@ -77,8 +78,11 @@ Adam의 `beta1`, `beta2`는 gradient와 gradient 제곱의 이동평균을 얼�
 | --- | --- | --- | --- | --- |
 | Baseline-A | 음수는 0, 양수는 그대로 통과 | 양수였던 위치로 gradient 전달 | 모든 Affine/BatchNorm 파라미터 | 은닉층 feature가 학습되며 높은 정확도 |
 | Step-A | 0 또는 1 binary activation | 거의 모든 위치에서 0으로 가정 | 마지막 `Affine3` 중심 | 은닉 feature extractor가 고정되어 ReLU보다 크게 낮은 성능 예상 |
+| Sigmoid-A | 0~1 사이의 연속값 | `sigmoid(x) * (1 - sigmoid(x))`로 gradient 전달 | 모든 Affine/BatchNorm 파라미터 | 학습은 가능하지만 포화 구간 때문에 ReLU보다 느리거나 낮은 성능 예상 |
 
 Step Function은 실제로 `x=0`에서 미분 불가능하고 그 외 구간의 미분값은 0입니다. 이번 구현에서는 backward를 `np.zeros_like(dout)`로 두었으므로 `Affine1`, `BatchNorm1`, `Affine2`, `BatchNorm2` 쪽 gradient는 사실상 막힙니다. 다만 마지막 `Affine3`는 Step 출력 이후에 있으므로 `W3`, `b3`는 업데이트됩니다. 따라서 성능은 random guess인 10%에 반드시 고정되지는 않지만, ReLU baseline보다 크게 낮을 것으로 예상됩니다.
+
+Sigmoid는 Step Function과 달리 미분 가능하므로 은닉층 앞쪽까지 gradient가 전달됩니다. 다만 출력이 0~1 범위로 압축되고 입력 절댓값이 커질수록 미분값이 0에 가까워지는 포화 문제가 있어, ReLU보다 수렴이 느리거나 최종 정확도가 낮아질 수 있습니다. 이번 Sigmoid-A는 activation만 바꾼 비교를 위해 Xavier 초기화로 바꾸지 않고 Baseline-A와 같은 He 초기화를 유지합니다.
 
 ## 4. 추가 실험 기록 양식
 
@@ -90,7 +94,7 @@ Step Function은 실제로 `x=0`에서 미분 불가능하고 그 외 구간의 
 | Step-A | Activation을 Step Function으로 변경 | Adam lr=0.001 | 20 | 128 | 77.29% | 은닉층 gradient 차단 영향 확인 |
 | Exp-C | Dropout 제거 | Adam lr=0.001 | 20 | 128 | (기입) | regularization 영향 확인 |
 | Exp-D | Optimizer를 SGD로 변경 | SGD lr=(기입) | 20 | 128 | (기입) | Adam 대비 수렴 속도 비교 |
-| Exp-E | Sigmoid activation 실험 | Adam lr=0.001 | 20 | 128 | (기입) | ReLU/Step과 gradient 흐름 비교 |
+| Sigmoid-A | Activation을 Sigmoid로 변경 | Adam lr=0.001 | 20 | 128 | (기입) | ReLU/Step과 gradient 흐름 비교 |
 
 ## 5. 실험 환경 메모
 
@@ -100,7 +104,7 @@ Step Function은 실제로 `x=0`에서 미분 불가능하고 그 외 구간의 
 | Python | 노트북 테스트 출력 기준 Python 3.11.14 |
 | 주요 라이브러리 | NumPy, Matplotlib, pytest |
 | requirements | `numpy>=1.24`, `matplotlib>=3.7`, `pytest>=7.0` |
-| 학습 소요 시간 | (기입 필요: 실행 환경 CPU/GPU 기준으로 측정) |
+| 학습 소요 시간 | 약 4분 |
 
 ## 6. 발표용 핵심 요약
 

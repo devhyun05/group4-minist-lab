@@ -4,6 +4,8 @@
 
 학생 구현 대상:
 - ReLU.forward, ReLU.backward
+- StepFunction.forward, StepFunction.backward
+- Sigmoid.forward, Sigmoid.backward
 - Softmax.forward, Softmax.backward
 """
 
@@ -68,6 +70,27 @@ class StepFunction:
     def backward(self, dout):
         """미분값을 0으로 두어 이전 층으로 gradient를 흘리지 않습니다."""
         return np.zeros_like(dout)
+
+
+class Sigmoid:
+    """
+    Sigmoid 활성화 함수.
+
+    미분 가능하지만 입력이 아주 크거나 작으면 gradient가 작아지는 포화 문제가 생길 수 있습니다.
+    """
+
+    def __init__(self):
+        self.out = None
+
+    def forward(self, x):
+        """입력을 0~1 범위의 부드러운 확률형 activation으로 변환합니다."""
+        out = 1 / (1 + np.exp(-x))
+        self.out = out
+        return out
+
+    def backward(self, dout):
+        """sigmoid'(x) = sigmoid(x) * (1 - sigmoid(x))를 이용합니다."""
+        return dout * self.out * (1 - self.out)
 
 
 class Softmax:
