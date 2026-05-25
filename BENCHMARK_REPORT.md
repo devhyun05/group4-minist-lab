@@ -68,7 +68,7 @@ Adam의 `beta1`, `beta2`는 gradient와 gradient 제곱의 이동평균을 얼�
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: |
 | Baseline-A | ReLU | BN=True, Dropout=True, Dropout ratio=0.5, He init | Adam(lr=0.001, beta1=0.9, beta2=0.999) | 20 | 128 | **98.44%** | **537,354** |
 | Step-A | Step Function | Baseline-A에서 은닉층 activation만 Step으로 변경 | Adam(lr=0.001, beta1=0.9, beta2=0.999) | 20 | 128 | 77.29% | 537,354 |
-| Sigmoid-A | Sigmoid | Baseline-A에서 은닉층 activation만 Sigmoid로 변경, He init 유지 | Adam(lr=0.001, beta1=0.9, beta2=0.999) | 20 | 128 | (노트북 실행 후 기입) | 537,354 |
+| Sigmoid-A | Sigmoid | Baseline-A에서 은닉층 activation만 Sigmoid로 변경, He init 유지 | Adam(lr=0.001, beta1=0.9, beta2=0.999) | 20 | 128 | 97.79% | 537,354 |
 
 손실 곡선은 `mnist_lab.ipynb`의 `plot_loss_history(loss_history)` 출력으로 확인합니다. 현재 기준 실험에서는 학습 후 테스트 정확도 98% 이상을 달성했으므로, 기본 구조와 optimizer 설정은 MNIST 분류에 충분히 안정적으로 수렴한 것으로 볼 수 있습니다.
 
@@ -94,9 +94,20 @@ Sigmoid는 Step Function과 달리 미분 가능하므로 은닉층 앞쪽까지
 | Step-A | Activation을 Step Function으로 변경 | Adam lr=0.001 | 20 | 128 | 77.29% | 은닉층 gradient 차단 영향 확인 |
 | Exp-C | Dropout 제거 | Adam lr=0.001 | 20 | 128 | (기입) | regularization 영향 확인 |
 | Exp-D | Optimizer를 SGD로 변경 | SGD lr=(기입) | 20 | 128 | (기입) | Adam 대비 수렴 속도 비교 |
-| Sigmoid-A | Activation을 Sigmoid로 변경 | Adam lr=0.001 | 20 | 128 | (기입) | ReLU/Step과 gradient 흐름 비교 |
+| Sigmoid-A | Activation을 Sigmoid로 변경 | Adam lr=0.001 | 20 | 128 | 97.79% | ReLU/Step과 gradient 흐름 비교 |
 
-## 5. 실험 환경 메모
+## 5. Gradient Vanishing 진단 기록
+
+이 진단 실험은 전체 학습을 다시 수행하지 않고, 같은 mini-batch 하나에서 ReLU 모델과 Sigmoid 모델을 각각 한 번 forward/backward 한 뒤 layer별 `dW`의 L2 norm을 비교합니다. Dropout은 랜덤 mask 영향을 줄이기 위해 끄고, BatchNorm은 현재 모델 구조와 맞추기 위해 유지합니다.
+
+| Activation | `||dW1||` | `||dW2||` | `||dW3||` | 관찰 메모 |
+| --- | ---: | ---: | ---: | --- |
+| ReLU | (진단 셀 실행 후 기입) | (진단 셀 실행 후 기입) | (진단 셀 실행 후 기입) | 기준 gradient 흐름 |
+| Sigmoid | (진단 셀 실행 후 기입) | (진단 셀 실행 후 기입) | (진단 셀 실행 후 기입) | 앞쪽 layer gradient가 ReLU보다 작아지는지 확인 |
+
+Sigmoid는 Step Function과 달리 미분 가능하므로 gradient가 완전히 끊기지는 않습니다. 다만 `sigmoid'(x) = sigmoid(x) * (1 - sigmoid(x)) <= 0.25`이기 때문에 여러 층을 지나며 gradient가 작아질 수 있습니다. 현재 모델은 은닉층이 2개이고 BatchNorm을 사용하므로 gradient vanishing이 완화되어 극단적으로 보이지 않을 수 있으며, 이 경우에는 ReLU와 Sigmoid의 gradient norm 비율과 loss curve를 함께 해석합니다.
+
+## 6. 실험 환경 메모
 
 | 항목 | 내용 |
 | --- | --- |
@@ -106,15 +117,16 @@ Sigmoid는 Step Function과 달리 미분 가능하므로 은닉층 앞쪽까지
 | requirements | `numpy>=1.24`, `matplotlib>=3.7`, `pytest>=7.0` |
 | 학습 소요 시간 | 약 4분 |
 
-## 6. 발표용 핵심 요약
+## 7. 발표용 핵심 요약
 
 - 모델은 784 -> 512 -> 256 -> 10 구조의 MLP이며, 은닉층마다 BatchNorm, ReLU, Dropout을 적용했습니다.
 - BatchNorm은 학습 중 batch 통계로 activation 분포를 안정화하고, 추론 시에는 누적된 running mean/var를 사용합니다.
 - Dropout은 학습 중 일부 뉴런을 랜덤하게 꺼서 과적합을 줄이는 regularization 역할을 합니다.
 - Adam은 gradient 이동평균과 제곱 이동평균을 함께 사용해 SGD보다 빠르고 안정적인 수렴을 기대할 수 있습니다.
 - Baseline-A는 `epochs=20`, `batch_size=128`, `Adam(lr=0.001)` 설정에서 테스트 정확도 98.44%를 기록했습니다.
+- Sigmoid-A는 같은 조건에서 97.79%를 기록했으며, ReLU보다 낮지만 Step-A보다는 훨씬 안정적으로 학습되었습니다.
 - seed가 고정되어 있지 않으므로 재실행 시 정확도는 소폭 달라질 수 있습니다.
 
-## 7. 다음 실험 제안
+## 8. 다음 실험 제안
 
 Baseline-A는 98% 이상의 테스트 정확도를 달성했으므로 기본 모델 구조는 MNIST 분류에 적합합니다. 다음 단계에서는 Dropout ratio, BatchNorm 사용 여부, optimizer 종류, learning rate를 바꿔가며 수렴 속도와 테스트 정확도의 차이를 비교하면 발표에서 더 설득력 있는 ablation 결과를 제시할 수 있습니다.
