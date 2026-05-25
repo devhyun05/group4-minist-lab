@@ -100,7 +100,7 @@ Sigmoid는 Step Function과 달리 미분 가능하므로 은닉층 앞쪽까지
 
 이 진단 실험은 전체 학습을 다시 수행하지 않고, 같은 mini-batch 하나에서 ReLU 모델과 Sigmoid 모델을 각각 한 번 forward/backward 한 뒤 layer별 `dW`의 L2 norm을 비교합니다. Dropout은 랜덤 mask 영향을 줄이기 위해 끄고, BatchNorm은 현재 모델 구조와 맞추기 위해 유지합니다.
 
-| Activation | `||dW1||` | `||dW2||` | `||dW3||` | 관찰 메모 |
+| Activation | dW1 L2 norm | dW2 L2 norm | dW3 L2 norm | 관찰 메모 |
 | --- | ---: | ---: | ---: | --- |
 | ReLU | 2.950720e+00 | 2.069579e+00 | 1.804833e+00 | 기준 gradient 흐름 |
 | Sigmoid | 9.426143e-01 | 7.321449e-01 | 1.546690e+00 | `W1`, `W2` gradient가 ReLU보다 작게 관찰됨 |
