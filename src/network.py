@@ -121,7 +121,7 @@ class NeuralNetwork:
             else:
                 x = layer.forward(x)
 
-        return x
+        return self.last_layer.forward(x)
         raise NotImplementedError("NeuralNetwork.forward를 구현하세요.")
 
     def backward(self, dout):
