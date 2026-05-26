@@ -167,9 +167,9 @@ flowchart LR
     class ARESULT metricA;
     class CONCLUSION conclusion;
 ```
-### 6-5 Dropout / BatchNorm 제거 실험 비교
+## 6-5 Dropout / BatchNorm 제거 실험 비교
 
-## 1. 핵심 요약
+### 핵심 요약
 
 이 실험은 손글씨 숫자 이미지인 MNIST를 분류하는 신경망에서 Dropout과 Batch Normalization이 학습 결과에 어떤 영향을 주는지 확인하기 위해 진행했다.
 
@@ -179,7 +179,7 @@ BatchNorm만 사용한 모델은 train accuracy가 99.96%로 가장 높았지만
 
 따라서 이번 결과는 "충분한 데이터와 20 epoch 조건에서는 Dropout + BatchNorm 조합이 가장 좋은 일반화 성능을 보였다"라고 해석할 수 있다.
 
-## 2. 실험 결과
+### 실험 결과
 
 | 실험군 | Train Accuracy | Test Accuracy | Final Loss | 파라미터 수 |
 | --- | ---: | ---: | ---: | ---: |
@@ -188,7 +188,7 @@ BatchNorm만 사용한 모델은 train accuracy가 99.96%로 가장 높았지만
 | Dropout only | 99.77% | 98.36% | 0.0389 | 535,818 |
 | No Dropout / BN | 99.82% | 97.98% | 0.0077 | 535,818 |
 
-## 3. 결론
+### 결론
 
 현재 실험 조건에서는 `Dropout + BN` 모델이 가장 높은 테스트 정확도를 보였다. BatchNorm은 학습을 안정화하고, Dropout은 과적합을 줄이는 역할을 하므로 두 기법을 함께 사용했을 때 가장 좋은 일반화 성능을 얻은 것으로 해석할 수 있다.
 
