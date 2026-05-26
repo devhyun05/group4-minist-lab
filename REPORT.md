@@ -165,7 +165,7 @@ flowchart LR
 | Dropout only | 99.77% | 98.36% | 0.0389 | 535,818 |
 | No Dropout / BN | 99.82% | 97.98% | 0.0077 | 535,818 |
 
-<img width="1498" height="948" alt="image" src="https://github.com/user-attachments/assets/0e188742-c2d4-451e-95fe-ea902da2daec" />
+<img width="800" height="600" alt="image" src="https://github.com/user-attachments/assets/0e188742-c2d4-451e-95fe-ea902da2daec" />
 
 
 ### 결론
