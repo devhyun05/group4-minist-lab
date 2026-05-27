@@ -96,7 +96,7 @@ MNIST 10-class 분류를 **NumPy만으로 구현한 신경망**으로 수행하�
 |           1.0 |          9.8% | 너무 커서 학습 실패        |
 
 <img width="800" height="600" alt="image" src="https://github.com/user-attachments/assets/a1efa426-10d8-49bc-a972-fb3cd973e5ce" />
-
+<img width="1544" height="1140" alt="image" src="https://github.com/user-attachments/assets/ca6c3dbf-333c-481c-9fb6-51fb0a66920b" />
 
 
 ### 6-4 Optimizer 비교: SGD vs Adam
