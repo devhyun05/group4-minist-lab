@@ -62,7 +62,7 @@ MNIST 10-class 분류를 **NumPy만으로 구현한 신경망**으로 수행하�
 
 ## 6. 추가 실험 및 벤치마크
 
-### 6.1 Activation Function 비교
+### 6-1 Activation Function 비교
 
 | Run        | Activation    | 변경점                             | Test Accuracy | Total Params |
 | ---------- | ------------- | ---------------------------------- | ------------: | -----------: |
@@ -72,7 +72,7 @@ MNIST 10-class 분류를 **NumPy만으로 구현한 신경망**으로 수행하�
 
 <img width="800" height="600" alt="image" src="https://github.com/user-attachments/assets/6407cb69-74bb-4c41-b3d7-524c66d74acf" />
 
-### 6.2 Gradient Vanishing 진단 기록
+### 6-2 Gradient Vanishing 진단 기록
 
 | Activation |  dW1 L2 norm |  dW2 L2 norm |  dW3 L2 norm | 관찰 메모                                  |
 | ---------- | -----------: | -----------: | -----------: | ------------------------------------------ |
@@ -82,7 +82,7 @@ MNIST 10-class 분류를 **NumPy만으로 구현한 신경망**으로 수행하�
 <img width="800" height="600" alt="image" src="https://github.com/user-attachments/assets/66975068-05a2-4a2b-99f2-a4577279a22f" />
 
 
-## 6-3. 하이퍼파라미터 변경 실험
+### 6-3. 하이퍼파라미터 변경 실험
 
 ### Learning Rate 변경 실험
 
@@ -153,7 +153,7 @@ flowchart LR
     class ARESULT metricA;
     class CONCLUSION conclusion;
 ```
-## 6-5 Dropout / BatchNorm 제거 실험 비교
+### 6-5 Dropout / BatchNorm 제거 실험 비교
 
 ### 실험 결과
 
