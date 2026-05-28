@@ -23,6 +23,9 @@ class Affine:
         """가중치 W와 편향 b를 외부 params dict와 같은 배열 객체로 공유합니다."""
         self.W = W
         self.b = b
+        self.x = None
+        self.dW = None
+        self.db = None
 
     def forward(self, x):
         """
@@ -33,6 +36,10 @@ class Affine:
             (batch_size, output_dim)
         """
         # TODO: backward에서 사용할 입력 x를 저장하고 x @ W + b를 반환하세요.
+        self.x = x
+        out = (x @ self.W) + self.b
+        
+        return out
         raise NotImplementedError("Affine.forward를 구현하세요.")
 
     def backward(self, dout):
@@ -48,6 +55,11 @@ class Affine:
         """
         # TODO: self.dW, self.db, dx를 계산하세요.
         # 힌트: dW = x.T @ dout, db = batch 방향 합, dx = dout @ W.T
+        dx = dout @ self.W.T
+        self.dW = self.x.T @ dout
+        self.db = np.sum(dout, axis=0)
+
+        return dx
         raise NotImplementedError("Affine.backward를 구현하세요.")
 
 
@@ -72,6 +84,12 @@ class BatchNorm:
         self.running_mean = np.zeros_like(beta)
         self.running_var = np.zeros_like(beta)
         self.eps = 1e-7
+        self.batch_size = None
+        self.xc = None
+        self.xn = None
+        self.std = None
+        self.dgamma = None
+        self.dbeta = None
 
     def forward(self, x, train=True):
         """
@@ -83,6 +101,25 @@ class BatchNorm:
             정규화 후 gamma, beta가 적용된 배열
         """
         # TODO: train=True에서는 batch mean/var로 정규화하고 running 통계를 갱신하세요.
+        if train:
+            mu = np.mean(x, axis=0)
+            xc = x - mu
+            var = np.mean(xc**2, axis=0)
+            std = np.sqrt(var + self.eps)
+            xn = xc / std
+
+            self.batch_size = x.shape[0]
+            self.xc = xc
+            self.xn = xn
+            self.std = std
+            self.running_mean = self.momentum * self.running_mean + (1 - self.momentum) * mu
+            self.running_var = self.momentum * self.running_var + (1 - self.momentum) * var
+        else:
+            xc = x - self.running_mean
+            xn = xc / np.sqrt(self.running_var + self.eps)
+
+        out = self.gamma * xn + self.beta
+        return out
         # TODO: train=False에서는 running_mean/running_var를 사용하세요.
         raise NotImplementedError("BatchNorm.forward를 구현하세요.")
 
@@ -98,6 +135,18 @@ class BatchNorm:
         """
         # TODO: self.dbeta, self.dgamma, dx를 계산하세요.
         # 힌트: 먼저 dbeta와 dgamma shape가 beta/gamma와 같은지 확인합니다.
+        self.dbeta = np.sum(dout, axis=0)
+        self.dgamma = np.sum(self.xn * dout, axis=0)
+
+        dxn = self.gamma * dout
+        dxc = dxn / self.std
+        dstd = -np.sum(dxn * self.xc / (self.std**2), axis=0)
+        dvar = 0.5 * dstd / self.std
+        dxc += (2.0 / self.batch_size) * self.xc * dvar
+        dmu = np.sum(dxc, axis=0)
+        dx = dxc - dmu / self.batch_size
+
+        return dx
         raise NotImplementedError("BatchNorm.backward를 구현하세요.")
 
 
@@ -112,6 +161,7 @@ class Dropout:
     def __init__(self, drop_ratio=0.5):
         """Args: drop_ratio: 학습 중 0으로 만들 뉴런 비율."""
         self.drop_ratio = drop_ratio
+        self.mask = None
 
     def forward(self, x, train=True):
         """
@@ -121,9 +171,15 @@ class Dropout:
         """
         # TODO: train=True에서는 mask를 만들고 x에 곱하세요.
         # TODO: train=False에서는 x * (1 - drop_ratio)를 반환하세요.
+        if train:
+            self.mask = np.random.rand(*x.shape) > self.drop_ratio
+            return x * self.mask
+
+        return x * (1 - self.drop_ratio)
         raise NotImplementedError("Dropout.forward를 구현하세요.")
 
     def backward(self, dout):
         """forward에서 꺼졌던 뉴런 위치에는 gradient도 흘리지 않습니다."""
         # TODO: forward에서 만든 mask를 dout에 곱하세요.
+        return dout * self.mask
         raise NotImplementedError("Dropout.backward를 구현하세요.")
