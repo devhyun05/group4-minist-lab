@@ -51,6 +51,9 @@ PyTorch나 TensorFlow의 학습 API를 사용하지 않았습니다. Affine laye
 Python 3.11 기준입니다.
 
 ```bash
+git clone https://github.com/devhyun05/group4-mnist-lab.git
+cd group4-mnist-lab
+
 conda create -n mnist-nn python=3.11 -y
 conda activate mnist-nn
 pip install -r requirements.txt
@@ -64,6 +67,7 @@ pytest tests -q
 
 ```text
 src/
+  data.py          데이터 로드와 전처리
   activations.py   activation과 gradient
   layers.py        Affine, BatchNorm, Dropout
   losses.py        Cross Entropy
